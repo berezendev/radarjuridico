@@ -1,5 +1,5 @@
-gnews
 streamlit
+gnews
 
 # -*- coding: utf-8 -*-
 """

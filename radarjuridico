@@ -1,0 +1,167 @@
+gnews
+# -*- coding: utf-8 -*-
+"""
+Radar Jurídico - Busca de notícias recentes organizadas por disciplina
+Adaptado para execução fora do Google Colab (por exemplo, via terminal ou GitHub)
+"""
+
+from gnews import GNews
+
+# Configuração da API de notícias (últimos 7 dias)
+google_news = GNews(language='pt', country='BR', period='7d', max_results=10)
+
+# Dicionário de disciplinas com palavras-chave específicas
+mapa_disciplinas = {
+    "Economia": [
+        "inflação Brasil", "taxa de juros BCB", "Selic", "reforma tributária",
+        "orçamento público", "crescimento PIB", "desemprego IBGE", "mercado financeiro",
+        "divida pública", "Banco Central", "política monetária"
+    ],
+
+    "Crime e Sociedade (Penal)": [
+        "taxa de homicídios", "violência urbana", "segurança pública", "sistema prisional brasileiro",
+        "facções criminosas", "PCC", "Comando Vermelho", "lavagem de dinheiro", "crime organizado",
+        "polícia civil", "polícia militar", "investigação criminal", "prova penal"
+    ],
+
+    "Pensamento Jurídico Brasileiro": [
+        "STF jurisprudência", "Supremo Tribunal Federal",
+        "controle de constitucionalidade", "ADI", "ADPF", "tese jurídica", "precedente vinculante",
+        "súmula vinculante", "ativismo judicial", "constituição cidadã", "interpretação constitucional",
+        "Miguel Reale", "Rui Barbosa", "Pontes de Miranda", "jurisprudência"
+    ],
+
+    "Teoria do Direito": [
+        "filosofia do direito", "positivismo jurídico", "jusnaturalismo", "hermenêutica jurídica",
+        "interpretação da lei", "eficácia da norma", "segurança jurídica", "princípios jurídicos",
+        "ponderação de princípios", "Robert Alexy", "Hans Kelsen", "eficácia social do direito"
+    ],
+
+    "Teoria do Direito Constitucional": [
+        "constituição federal", "controle concentrado", "controle difuso", "cláusulas pétreas",
+        "emenda constitucional", "PEC", "federação brasileira", "separação de poderes",
+        "princípio da dignidade", "princípio da igualdade", "devido processo legal",
+        "jurisdição constitucional", "STF constitucional"
+    ],
+
+    "Teoria do Estado Democrático": [
+        "democracia brasileira", "estado democrático de direito", "sistema eleitoral",
+        "reforma política", "financiamento de campanha", "fidelidade partidária",
+        "plebiscito", "referendo", "transparência pública", "accountability"
+    ],
+
+    "Design Institucional": [
+        "reforma administrativa", "PEC 32", "estabilidade servidor", "regime jurídico único",
+        "autonomia do Banco Central", "governança pública", "agências reguladoras",
+        "ANATEL", "ANEEL", "ANVISA", "administração pública", "concurso público"
+    ],
+
+    "Organização do Estado e Direitos Fundamentais": [
+        "direitos fundamentais", "direitos sociais", "saúde pública", "SUS",
+        "educação básica", "moradia digna", "função social propriedade",
+        "ações coletivas", "defensoria pública", "ministério público"
+    ],
+
+    "Sociologia Jurídica": [
+        "sociologia do direito", "encarceramento em massa", "população carcerária",
+        "racismo institucional", "desigualdade social", "acesso à justiça",
+        "judicialização da saúde", "judicialização da política", "efetividade das leis",
+        "movimentos sociais", "movimento negro", "direitos indígenas", "pluralismo jurídico"
+    ],
+
+    "Penas e Medidas Alternativas (Penal)": [
+        "penas alternativas", "sursis", "prestação serviços comunitários",
+        "restritivas de direitos", "monitoramento eletrônico", "prisão albergue",
+        "regime semiaberto", "progressão de regime", "livramento condicional",
+        "execução penal", "LEP", "ressocialização"
+    ],
+
+    "Teoria Geral do Direito Civil": [
+        "código civil", "personalidade jurídica", "capacidade civil",
+        "direito das coisas", "contratos civis",
+        "responsabilidade civil", "danos morais", "direito de família",
+        "casamento", "união estável", "divórcio", "pensão alimentícia",
+        "inventário", "herança", "direito sucessório", "LGPD"
+    ],
+
+    "Análise Econômica do Direito": [
+        "análise econômica do direito", "eficiência alocativa", "custos de transação",
+        "externalidades", "regulamentação", "defesa concorrência",
+        "barreiras entrada", "propriedade intelectual", "INPI", "patentes",
+        "compliance", "governança corporativa", "mercado de capitais"
+    ]
+}
+
+
+def calcular_relevancia(noticia, palavra_chave):
+    """Calcula a relevância da notícia"""
+    titulo = noticia['title'].lower()
+    descricao = noticia.get('description', '').lower()
+
+    pontuacao = 0
+
+    if palavra_chave.lower() in titulo:
+        pontuacao += 3
+    if palavra_chave.lower() in descricao:
+        pontuacao += 2
+
+    fontes_confiaveis = ['g1', 'oglobo', 'folha', 'estadão', 'valor', 'poder360', 'congresso em foco']
+    fonte = noticia['publisher']['title'].lower()
+    if any(fonte_confiavel in fonte for fonte_confiavel in fontes_confiaveis):
+        pontuacao += 1
+
+    return pontuacao
+
+
+def main():
+    print("=== RADAR JURÍDICO ===\n")
+    print("Disciplinas disponíveis:\n")
+
+    for i, disciplina in enumerate(mapa_disciplinas.keys(), start=1):
+        print(f"{i}. {disciplina}")
+
+    try:
+        escolha = int(input("\nDigite o número da disciplina: "))
+        disciplinas_lista = list(mapa_disciplinas.keys())
+        disciplina_selecionada = disciplinas_lista[escolha - 1]
+    except (ValueError, IndexError):
+        print("\nEntrada inválida. Encerrando o programa.")
+        return
+
+    palavras_chave = mapa_disciplinas[disciplina_selecionada]
+
+    print(f"\nBuscando temas da semana para: {disciplina_selecionada}")
+    print("Período: últimos 7 dias")
+    print("Limitado às 5 notícias mais relevantes\n")
+
+    todas_noticias = []
+
+    for palavra in palavras_chave[:8]:
+        noticias = google_news.get_news(palavra)
+        for noticia in noticias:
+            titulo = noticia['title']
+            relevancia = calcular_relevancia(noticia, palavra)
+            noticia_completa = {
+                'titulo': titulo,
+                'fonte': noticia['publisher']['title'],
+                'url': noticia['url'],
+                'palavra_chave': palavra,
+                'relevancia': relevancia
+            }
+            if not any(n['titulo'] == titulo for n in todas_noticias):
+                todas_noticias.append(noticia_completa)
+
+    todas_noticias.sort(key=lambda x: x['relevancia'], reverse=True)
+    noticias_finais = todas_noticias[:5]
+
+    print(f"Busca concluída! {len(noticias_finais)} notícias mais relevantes:\n")
+
+    for i, noticia in enumerate(noticias_finais, 1):
+        print(f"{i}. {noticia['titulo']}")
+        print(f"Fonte: {noticia['fonte']}")
+        print(f"Tópico: {noticia['palavra_chave']}")
+        print(f"Link: {noticia['url']}\n")
+
+
+if __name__ == "__main__":
+    main()

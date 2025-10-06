@@ -1,16 +1,19 @@
 gnews
+streamlit
+
 # -*- coding: utf-8 -*-
 """
-Radar Jurídico - Busca de notícias recentes organizadas por disciplina
-Adaptado para execução fora do Google Colab (por exemplo, via terminal ou GitHub)
+Radar Jurídico - Versão Streamlit
+Busca notícias recentes organizadas por disciplina
 """
 
+import streamlit as st
 from gnews import GNews
 
-# Configuração da API de notícias (últimos 7 dias)
+# Configuração da API de notícias
 google_news = GNews(language='pt', country='BR', period='7d', max_results=10)
 
-# Dicionário de disciplinas com palavras-chave específicas
+# Dicionário de disciplinas com palavras-chave
 mapa_disciplinas = {
     "Economia": [
         "inflação Brasil", "taxa de juros BCB", "Selic", "reforma tributária",
@@ -85,83 +88,4 @@ mapa_disciplinas = {
     ],
 
     "Análise Econômica do Direito": [
-        "análise econômica do direito", "eficiência alocativa", "custos de transação",
-        "externalidades", "regulamentação", "defesa concorrência",
-        "barreiras entrada", "propriedade intelectual", "INPI", "patentes",
-        "compliance", "governança corporativa", "mercado de capitais"
-    ]
-}
-
-
-def calcular_relevancia(noticia, palavra_chave):
-    """Calcula a relevância da notícia"""
-    titulo = noticia['title'].lower()
-    descricao = noticia.get('description', '').lower()
-
-    pontuacao = 0
-
-    if palavra_chave.lower() in titulo:
-        pontuacao += 3
-    if palavra_chave.lower() in descricao:
-        pontuacao += 2
-
-    fontes_confiaveis = ['g1', 'oglobo', 'folha', 'estadão', 'valor', 'poder360', 'congresso em foco']
-    fonte = noticia['publisher']['title'].lower()
-    if any(fonte_confiavel in fonte for fonte_confiavel in fontes_confiaveis):
-        pontuacao += 1
-
-    return pontuacao
-
-
-def main():
-    print("=== RADAR JURÍDICO ===\n")
-    print("Disciplinas disponíveis:\n")
-
-    for i, disciplina in enumerate(mapa_disciplinas.keys(), start=1):
-        print(f"{i}. {disciplina}")
-
-    try:
-        escolha = int(input("\nDigite o número da disciplina: "))
-        disciplinas_lista = list(mapa_disciplinas.keys())
-        disciplina_selecionada = disciplinas_lista[escolha - 1]
-    except (ValueError, IndexError):
-        print("\nEntrada inválida. Encerrando o programa.")
-        return
-
-    palavras_chave = mapa_disciplinas[disciplina_selecionada]
-
-    print(f"\nBuscando temas da semana para: {disciplina_selecionada}")
-    print("Período: últimos 7 dias")
-    print("Limitado às 5 notícias mais relevantes\n")
-
-    todas_noticias = []
-
-    for palavra in palavras_chave[:8]:
-        noticias = google_news.get_news(palavra)
-        for noticia in noticias:
-            titulo = noticia['title']
-            relevancia = calcular_relevancia(noticia, palavra)
-            noticia_completa = {
-                'titulo': titulo,
-                'fonte': noticia['publisher']['title'],
-                'url': noticia['url'],
-                'palavra_chave': palavra,
-                'relevancia': relevancia
-            }
-            if not any(n['titulo'] == titulo for n in todas_noticias):
-                todas_noticias.append(noticia_completa)
-
-    todas_noticias.sort(key=lambda x: x['relevancia'], reverse=True)
-    noticias_finais = todas_noticias[:5]
-
-    print(f"Busca concluída! {len(noticias_finais)} notícias mais relevantes:\n")
-
-    for i, noticia in enumerate(noticias_finais, 1):
-        print(f"{i}. {noticia['titulo']}")
-        print(f"Fonte: {noticia['fonte']}")
-        print(f"Tópico: {noticia['palavra_chave']}")
-        print(f"Link: {noticia['url']}\n")
-
-
-if __name__ == "__main__":
-    main()
+        "análise econômica do direito", "eficiência
